@@ -30,7 +30,7 @@ const getUploadParameters = (url: string) => {
   const { owner, repo, releaseId } = matches?.groups ?? {};
   const release_id = Number(releaseId);
   const parameters = [
-    `owner="${matches}"`,
+    `owner="${owner}"`,
     `repo="${repo}"`,
     `release_id="${release_id}"`,
   ].join(", ");
