@@ -29,19 +29,19 @@ const getFiles = async (pattern) => {
   }
 };
 
-const fileList = (files) => [
-  "### Batch Upload Files", 
-  ...files.map((file) => `- \`${file}\``),
-].join("\n")
+const fileList = (files) =>
+  ["### Batch Upload Files", ...files.map((file) => `- \`${file}\``)].join(
+    "\n"
+  );
 
-const uploadAsset = async (github, url) => (filepath) => {
+const uploadAsset = (github, url) => async (filepath) => {
   const name = path.basename(filepath);
   try {
-    const file = await fs.readFile(filepath)
-    await github.rest.repos.uploadReleaseAsset({url, name, file});
+    const file = await fs.readFile(filepath);
+    await github.rest.repos.uploadReleaseAsset({ url, name, file });
     core.info(`✓ uploaded file: \`${filepath}\``);
   } catch (error) {
     core.error(error);
     core.setFailed(`✗ failed to upload file: \`${filepath}\``);
   }
-}
+};
