@@ -1,0 +1,15 @@
+name: Batch Upload Assets
+description: Batch upload of files to a release
+inputs:
+  token:
+    description: Github token
+    required: true
+  upload_url:
+    description: The URL to upload assets to
+    required: true
+  file_path:
+    description: Glob pattern of files
+    required: true
+runs:
+  using: node16
+  main: dist/index.js
