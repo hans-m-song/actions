@@ -11,7 +11,7 @@ inputs:
   aws-secret-access-key:
     description: AWS secret access key
     required: true
-  repository:
+  repository-name:
     description: Target repository to prune
     required: true
 

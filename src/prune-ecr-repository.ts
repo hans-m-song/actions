@@ -2,7 +2,21 @@ import * as core from "@actions/core";
 import {
   ECRPUBLICClient,
   paginateDescribeImages,
+  BatchDeleteImageCommand,
+  BatchDeleteImageCommandOutput,
 } from "@aws-sdk/client-ecr-public";
+
+const serialiseResult = (response: BatchDeleteImageCommandOutput) =>
+  [
+    "### Batch deleted images",
+    ...(response.imageIds?.map(
+      (image) => `✓ ${image.imageDigest}:${image.imageTag}`
+    ) ?? []),
+    ...(response.failures?.map(
+      (image) =>
+        `✗ ${image.imageId?.imageDigest}:${image.imageId?.imageTag} - ${image.failureCode}: ${image.failureReason}`
+    ) ?? []),
+  ].join("\n");
 
 (async () => {
   const region = core.getInput("aws-region");
@@ -28,4 +42,26 @@ import {
   }
 
   console.log(JSON.stringify(images));
+  core.info(`✓ fetched images: ${images.length}`);
+
+  const dangling = images.filter(
+    (image) => !image.imageTags || image.imageTags.length < 1
+  );
+
+  if (dangling.length < 1) {
+    core.info(`✓ no images to remove`);
+    return;
+  }
+
+  core.info(`attempting to remove: ${dangling.length} of ${images.length}`);
+
+  const response = await client.send(
+    new BatchDeleteImageCommand({ repositoryName, imageIds: dangling })
+  );
+
+  core.exportVariable("GITHUB_STEP_SUMMARY", serialiseResult(response));
+
+  if (response.failures && response.failures.length > 0) {
+    core.setFailed(`✗ failures encountered deleting images`);
+  }
 })();
