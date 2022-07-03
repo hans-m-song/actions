@@ -1,0 +1,20 @@
+name: Prune ECR Repository
+description: Prune ECR Repository
+inputs:
+  aws-region:
+    description: AWS region
+    required: false
+    default: us-east-1
+  aws-access-key-id:
+    description: AWS access key id
+    required: true
+  aws-secret-access-key:
+    description: AWS secret access key
+    required: true
+  repository:
+    description: Target repository to prune
+    required: true
+
+runs:
+  using: node16
+  main: index.js

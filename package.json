@@ -8,12 +8,14 @@
   "scripts": {
     "compile": "esbuild --bundle --minify --platform=node --target=node16",
     "compile:batch-upload-assets": "yarn compile --outfile=batch-upload-assets/index.js ./src/batch-upload-assets.ts",
-    "bundle": "yarn compile:batch-upload-assets"
+    "compile:prune-ecr-repository": "yarn compile --outfile=prune-ecr-repository/index.js ./src/prune-ecr-repository.ts",
+    "bundle": "yarn compile:batch-upload-assets && yarn compile:prune-ecr-repository"
   },
   "dependencies": {
     "@actions/core": "^1.9.0",
     "@actions/github": "^5.0.3",
     "@actions/glob": "^0.3.0",
+    "@aws-sdk/client-ecr-public": "^3.121.0",
     "@types/node": "^18.0.0",
     "esbuild": "^0.14.47"
   }
