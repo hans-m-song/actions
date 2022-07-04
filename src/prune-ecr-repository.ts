@@ -9,13 +9,13 @@ import {
 const serialiseResult = (response: BatchDeleteImageCommandOutput) =>
   [
     "### Batch deleted images",
-    ...(response.imageIds?.map(
+    ...(response.imageIds ?? [])?.map(
       (image) => `✓ ${image.imageDigest}:${image.imageTag}`
-    ) ?? []),
-    ...(response.failures?.map(
+    ),
+    ...(response.failures ?? [])?.map(
       (image) =>
         `✗ ${image.imageId?.imageDigest}:${image.imageId?.imageTag} - ${image.failureCode}: ${image.failureReason}`
-    ) ?? []),
+    ),
   ].join("\n");
 
 (async () => {
@@ -53,15 +53,23 @@ const serialiseResult = (response: BatchDeleteImageCommandOutput) =>
     return;
   }
 
-  core.info(`attempting to remove: ${dangling.length} of ${images.length}`);
+  core.info(`attempting to remove: ${dangling.length} images`);
 
-  const response = await client.send(
-    new BatchDeleteImageCommand({ repositoryName, imageIds: dangling })
-  );
+  const response = await client
+    .send(new BatchDeleteImageCommand({ repositoryName, imageIds: dangling }))
+    .catch((error) => {
+      core.error(error);
+      return null;
+    });
+
+  if (!response) {
+    core.setFailed(`✗ failured to execute batch delete`);
+    return;
+  }
 
   core.exportVariable("GITHUB_STEP_SUMMARY", serialiseResult(response));
 
   if (response.failures && response.failures.length > 0) {
-    core.setFailed(`✗ failures encountered deleting images`);
+    core.setFailed(`✗ some images failed to delete`);
   }
 })();
