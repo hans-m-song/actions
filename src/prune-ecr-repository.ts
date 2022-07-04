@@ -3,20 +3,16 @@ import {
   ECRPUBLICClient,
   paginateDescribeImages,
   BatchDeleteImageCommand,
-  BatchDeleteImageCommandOutput,
+  ImageIdentifier,
 } from "@aws-sdk/client-ecr-public";
 
-const serialiseResult = (response: BatchDeleteImageCommandOutput) =>
-  [
-    "### Batch deleted images",
-    ...(response.imageIds ?? [])?.map(
-      (image) => `✓ ${image.imageDigest}:${image.imageTag}`
-    ),
-    ...(response.failures ?? [])?.map(
-      (image) =>
-        `✗ ${image.imageId?.imageDigest}:${image.imageId?.imageTag} - ${image.failureCode}: ${image.failureReason}`
-    ),
-  ].join("\n");
+const shortImageId = (id?: ImageIdentifier) => {
+  const digest = id?.imageDigest
+    ? `${id.imageDigest.slice(0, 4)}...${id.imageDigest.slice(-4)}`
+    : "unknown";
+  const tag = id?.imageTag ?? "unknown";
+  return `${digest}:${tag}`;
+};
 
 (async () => {
   const region = core.getInput("aws-region");
@@ -66,9 +62,31 @@ const serialiseResult = (response: BatchDeleteImageCommandOutput) =>
     return;
   }
 
-  core.exportVariable("GITHUB_STEP_SUMMARY", serialiseResult(response));
+  core.summary
+    .addHeading("ECR Cleanup Result")
+    .addTable([
+      [
+        { data: "Status", header: true },
+        { data: "Digest", header: true },
+        { data: "Comment", header: true },
+      ],
+      ...(response.imageIds ?? []).map((id) => [
+        "✓",
+        shortImageId(id),
+        "deleted",
+      ]),
+      ...(response.failures ?? []).map((id) => [
+        "✗",
+        shortImageId(id.imageId),
+        `${id.failureCode ?? "?"} - ${id.failureReason ?? "?"}`,
+      ]),
+    ])
+    .write();
 
   if (response.failures && response.failures.length > 0) {
     core.setFailed(`✗ some images failed to delete`);
+    return;
   }
+
+  core.info(`✓ deleted ${response.imageIds?.length ?? 0} images`);
 })();
