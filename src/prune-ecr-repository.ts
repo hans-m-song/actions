@@ -62,7 +62,7 @@ const serialiseResult = (response: BatchDeleteImageCommandOutput) =>
     });
 
   if (!response) {
-    core.setFailed(`✗ failured to execute batch delete`);
+    core.setFailed(`✗ failed to execute batch delete`);
     return;
   }
 
