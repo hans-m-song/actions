@@ -41,7 +41,6 @@ const serialiseResult = (response: BatchDeleteImageCommandOutput) =>
     }
   }
 
-  console.log(JSON.stringify(images));
   core.info(`✓ fetched images: ${images.length}`);
 
   const dangling = images.filter(
